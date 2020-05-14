@@ -1,5 +1,6 @@
+import ackcord.data.GuildMessage
 import ackcord.requests.{CreateMessage, CreateMessageData}
-import ackcord.{APIMessage, ClientSettings}
+import ackcord.{APIMessage, ClientSettings, EventRegistration}
 import cats.implicits._
 
 import scala.concurrent.Await
@@ -18,8 +19,15 @@ object Main extends App {
   val client = Await.result(clientSettings.createClient(), Duration.Inf)
 
   client.onEventAsync { implicit c => {
-    case APIMessage.MessageCreate(message, _) =>
-      val response = CreateMessage(message.channelId, CreateMessageData(content = "Hi there!"))
+    case APIMessage.MessageCreate(message, _) if message.content.toLowerCase.contains("primrose") =>
+
+      // This is really bad!!!
+      val guildMessage = message.asInstanceOf[GuildMessage]
+
+      
+
+      val messageData = CreateMessageData(content = s"Hi, ${guildMessage.member.nick.get.split(" ").head}!")
+      val response = CreateMessage(message.channelId, messageData)
       client.requestsHelper.run(response).map(_ => ())
     }
   }
